@@ -1,0 +1,6 @@
+../Core/Src/hall.c:11:14:ema_alpha	3
+../Core/Src/hall.c:22:6:Hall_Init	2
+../Core/Src/hall.c:37:6:Hall_SetParams	2
+../Core/Src/hall.c:52:6:Hall_ResetTrip	2
+../Core/Src/hall.c:67:6:Hall_OnEdgeMs	8
+../Core/Src/hall.c:121:6:Hall_TaskMs	7
