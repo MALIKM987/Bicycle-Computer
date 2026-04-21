@@ -43,3 +43,50 @@ Projekt jest rozwijany jako praktyczna realizacja z zakresu systemów embedded i
 
 ## Autor
 Maciej Molik
+
+
+# Bicycle Computer
+
+## Project Overview
+Bicycle Computer is an embedded systems project developed in C for an STM32 microcontroller. The goal of the project is to build a bicycle computer that can serve as a platform for measuring and displaying ride-related parameters such as speed, distance, and ride time.
+
+The project follows a typical STM32 development workflow, using a generated project structure and low-level drivers.
+
+## Main Objectives
+- develop an embedded application in C,
+- work on an STM32-based platform,
+- integrate user code with drivers and MCU configuration,
+- maintain a project structure typical for STM32CubeIDE / STM32CubeMX.
+
+## Technologies Used
+- C
+- STM32
+- STM32CubeIDE / STM32CubeMX
+- Embedded systems
+
+## Project Structure
+- `Core/` – application code and initialization files,
+- `Drivers/` – MCU drivers and libraries,
+- `Debug/`, `Release/` – build output files,
+- `*.ioc` – microcontroller and peripheral configuration,
+- `*.ld` – linker script.
+
+## My Contribution
+In this project, I was responsible for:
+- configuring and organizing the STM32 project,
+- developing application logic in C,
+- integrating user code with the generated project structure,
+- working within a typical embedded systems development workflow.
+
+## Project Status
+The project is being developed as a practical embedded systems and electronics implementation.
+
+## Possible Future Improvements
+- support for speed and distance sensors,
+- data visualization on a display,
+- ride history logging,
+- power consumption optimization,
+- extension with additional communication interfaces.
+
+## Author
+Maciej Molik
