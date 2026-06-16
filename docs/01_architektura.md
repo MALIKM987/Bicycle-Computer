@@ -1,150 +1,407 @@
-# Architektura systemu
+# Algorytmy obliczeniowe
 
 ## Spis treści
 
-1. [Cel architektury](#cel-architektury)
-2. [Ogólny schemat systemu](#ogólny-schemat-systemu)
-3. [Pełny przepływ danych](#pełny-przepływ-danych)
-4. [Opis bloków](#opis-bloków)
-5. [Warstwy systemu](#warstwy-systemu)
-6. [Założenia projektowe](#założenia-projektowe)
+1. [Założenia i oznaczenia](#założenia-i-oznaczenia)
+2. [Pomiar prędkości z czujnika Halla](#pomiar-prędkości-z-czujnika-halla)
+3. [Dystans i statystyki jazdy](#dystans-i-statystyki-jazdy)
+4. [Filtrowanie prędkości](#filtrowanie-prędkości)
+5. [Eliminacja fałszywych impulsów](#eliminacja-fałszywych-impulsów)
+6. [Wykrywanie zatrzymania](#wykrywanie-zatrzymania)
+7. [Wysokość z ciśnienia](#wysokość-z-ciśnienia)
+8. [Nachylenie trasy](#nachylenie-trasy)
+9. [VAM](#vam)
+10. [Roll i pitch z akcelerometru](#roll-i-pitch-z-akcelerometru)
+11. [Wskaźnik drgań](#wskaźnik-drgań)
+12. [Szacowanie mocy rowerzysty](#szacowanie-mocy-rowerzysty)
+13. [Energia i kilokalorie](#energia-i-kilokalorie)
+14. [Ograniczenia algorytmów](#ograniczenia-algorytmów)
 
-## Cel architektury
+## Założenia i oznaczenia
 
-Architektura projektu została podzielona na bloki, aby oddzielić pomiary, obliczenia, prezentację danych i diagnostykę. Dzięki temu projekt jest łatwiejszy do testowania, rozwijania i przeniesienia z płytki NUCLEO na własną płytkę PCB.
+W projekcie komputer rowerowy wyznacza parametry jazdy na podstawie impulsów z czujnika Halla, danych środowiskowych z BME280 oraz danych ruchu z IMU.
 
-## Ogólny schemat systemu
+| Symbol | Znaczenie | Jednostka |
+|---|---|---|
+| `C` | obwód koła | m |
+| `N` | liczba zaakceptowanych impulsów | - |
+| `PPR` | liczba impulsów na jeden obrót koła | impuls/obrót |
+| `T` | czas między impulsami | s |
+| `v` | prędkość liniowa | m/s |
+| `v_kmh` | prędkość w kilometrach na godzinę | km/h |
+| `d` | dystans | m |
+| `h` | wysokość | m |
+| `p` | ciśnienie zmierzone | hPa |
+| `p0` | ciśnienie odniesienia na poziomie morza | hPa |
+| `m` | masa rowerzysty, roweru i bagażu | kg |
+| `g` | przyspieszenie ziemskie | m/s² |
+| `Crr` | współczynnik oporu toczenia | - |
+| `CdA` | efektywna powierzchnia oporu aerodynamicznego | m² |
+| `rho` | gęstość powietrza | kg/m³ |
 
-```mermaid
-flowchart LR
-    subgraph SENSORY[Czujniki]
-        HALL[Czujnik Halla]
-        BME[BME280]
-        IMU[IMU]
-        BTN[Przycisk]
-    end
+## Pomiar prędkości z czujnika Halla
 
-    subgraph MCU[STM32]
-        EXTI[Przerwanie EXTI]
-        I2C[Magistrala I2C]
-        SPEED[Prędkość i dystans]
-        ENV[Dane środowiskowe]
-        MOTION[Orientacja i drgania]
-        CLIMB[Metryki podjazdu]
-        POWER[Model mocy]
-        UI[Logika interfejsu]
-    end
+Czujnik Halla generuje impuls przy wykryciu magnesu na kole. Jeżeli jeden impuls odpowiada jednemu pełnemu obrotowi koła, wtedy prędkość można wyznaczyć z obwodu koła i czasu pomiędzy impulsami.
 
-    subgraph WYJSCIA[Wyjścia]
-        OLED[OLED SSD1306]
-        UART[UART / CSV]
-    end
+Dla ogólnego przypadku, gdy na jeden obrót przypada `PPR` impulsów:
 
-    HALL --> EXTI --> SPEED
-    BME --> I2C --> ENV --> CLIMB
-    IMU --> I2C --> MOTION
-    BTN --> UI
+$$
+v = \frac{C}{T \cdot PPR}
+$$
 
-    SPEED --> POWER
-    CLIMB --> POWER
+gdzie:
 
-    SPEED --> OLED
-    ENV --> OLED
-    MOTION --> OLED
-    CLIMB --> OLED
-    POWER --> OLED
-    UI --> OLED
+- `v` - prędkość w m/s,
+- `C` - obwód koła w metrach,
+- `T` - czas między dwoma zaakceptowanymi impulsami w sekundach,
+- `PPR` - liczba impulsów na jeden obrót koła.
 
-    SPEED --> UART
-    ENV --> UART
-    MOTION --> UART
-    CLIMB --> UART
-    POWER --> UART
-```
+Przeliczenie na km/h:
 
-## Pełny przepływ danych
+$$
+v_{kmh} = v \cdot 3.6
+$$
 
-```mermaid
-flowchart TD
-    A[Impuls z czujnika Halla] --> B[Filtracja impulsu]
-    B --> C[Pomiar czasu między impulsami]
-    C --> D[Prędkość chwilowa]
-    D --> E[Filtr prędkości]
-    E --> F[Dystans i statystyki jazdy]
+Dla jednego magnesu na kole najczęściej:
 
-    G[Odczyt BME280] --> H[Temperatura, ciśnienie, wilgotność]
-    H --> I[Wysokość z ciśnienia]
-    I --> J[Nachylenie, VAM, przewyższenie]
+$$
+PPR = 1
+$$
 
-    K[Odczyt IMU] --> L[Roll i pitch]
-    K --> M[Wskaźnik drgań]
+czyli:
 
-    F --> N[Model mocy]
-    J --> N
+$$
+v = \frac{C}{T}
+$$
 
-    F --> O[OLED]
-    H --> O
-    J --> O
-    L --> O
-    M --> O
-    N --> O
+Przykład: dla obwodu koła `C = 2.096 m` i czasu między impulsami `T = 0.3 s`:
 
-    F --> P[UART / CSV]
-    H --> P
-    J --> P
-    L --> P
-    M --> P
-    N --> P
-```
+$$
+v = \frac{2.096}{0.3} = 6.986 \text{ m/s}
+$$
 
-## Opis bloków
+$$
+v_{kmh} = 6.986 \cdot 3.6 = 25.15 \text{ km/h}
+$$
 
-### Czujnik Halla
+## Dystans i statystyki jazdy
 
-Czujnik Halla wykrywa obrót koła. Każdy impuls oznacza przejście magnesu obok czujnika. Na podstawie czasu między impulsami można obliczyć prędkość, a na podstawie liczby impulsów - dystans.
+Dystans jest liczony z liczby zaakceptowanych impulsów.
 
-### Przerwanie EXTI
+Jeżeli jeden impuls odpowiada jednemu obrotowi koła:
 
-Przerwanie powinno wykonywać minimalną pracę: zapisać czas impulsu, sprawdzić prostą blokadę przeciwdrganiową i ustawić flagę dla pętli głównej. Dzięki temu system pozostaje responsywny.
+$$
+d = N \cdot C
+$$
 
-### Moduł prędkości i dystansu
+Dla ogólnego przypadku:
 
-Moduł przelicza impulsy na prędkość chwilową, prędkość filtrowaną, dystans przejazdu, czas ruchu oraz prędkość średnią i maksymalną.
+$$
+d = \frac{N}{PPR} \cdot C
+$$
 
-### BME280
+Średnia prędkość z całego przejazdu:
 
-BME280 mierzy temperaturę, ciśnienie i wilgotność. Ciśnienie jest używane również do estymacji wysokości, co pozwala obliczać przewyższenie i nachylenie trasy.
+$$
+v_{avg} = \frac{d}{t_{move}}
+$$
 
-### IMU
+gdzie `t_move` to czas jazdy bez postojów.
 
-IMU dostarcza dane z akcelerometru. W projekcie można je wykorzystać do obliczenia roll, pitch oraz prostego wskaźnika drgań.
+Po przeliczeniu na km/h:
 
-### Model mocy
+$$
+v_{avg,kmh} = \frac{d}{t_{move}} \cdot 3.6
+$$
 
-Model mocy szacuje orientacyjny wysiłek rowerzysty. Uwzględnia składnik podjazdu, opory toczenia i opór aerodynamiczny. Wynik nie zastępuje profesjonalnego miernika mocy.
+Maksymalna prędkość jest aktualizowana, gdy aktualna filtrowana prędkość jest większa od poprzedniego maksimum:
 
-### OLED
+$$
+v_{max} = \max(v_{max}, v_{filtered})
+$$
 
-OLED pokazuje dane lokalnie. Ze względu na mały ekran informacje powinny być podzielone na kilka stron, np. jazda, podjazd, środowisko, IMU i statystyki.
+## Filtrowanie prędkości
 
-### UART / CSV
+Pomiar prędkości z czujnika Halla może mieć skoki, szczególnie przy małych prędkościach lub pojedynczych zakłóceniach. Do wygładzenia wskazań można użyć filtru EMA, czyli wykładniczej średniej kroczącej.
 
-UART umożliwia diagnostykę i eksport danych do komputera. Tryb CSV pozwala zapisać dane z jazdy i później analizować je w Excelu, Pythonie lub innym narzędziu.
+$$
+v_f[n] = \alpha \cdot v[n] + (1 - \alpha) \cdot v_f[n-1]
+$$
 
-## Warstwy systemu
+gdzie:
 
-| Warstwa | Zadanie |
-|---|---|
-| Sprzęt | czujniki, OLED, przycisk, mikrokontroler |
-| Sterowniki | GPIO, EXTI, I2C, UART, timery |
-| Logika pomiarowa | prędkość, dystans, środowisko, IMU |
-| Algorytmy | wysokość, nachylenie, VAM, moc |
-| Prezentacja | OLED, UART, CSV |
+- `v[n]` - nowy pomiar prędkości,
+- `v_f[n]` - przefiltrowana prędkość,
+- `alpha` - współczynnik filtru z zakresu 0...1.
 
-## Założenia projektowe
+Interpretacja:
 
-- unikać blokujących opóźnień w pętli głównej,
-- trzymać krótką obsługę przerwań,
-- oddzielać logikę aplikacji od kodu wygenerowanego przez CubeMX,
-- stosować czytelne nazwy zmiennych z jednostkami,
-- umożliwić testowanie poszczególnych bloków osobno.
+- większe `alpha` - szybsza reakcja, ale większe skoki,
+- mniejsze `alpha` - stabilniejszy odczyt, ale większe opóźnienie.
+
+Jeżeli filtr ma być powiązany ze stałą czasową `tau`, można użyć:
+
+$$
+\alpha = \frac{\Delta t}{\tau + \Delta t}
+$$
+
+gdzie:
+
+- `Delta t` - czas od poprzedniej aktualizacji,
+- `tau` - stała czasowa filtru.
+
+## Eliminacja fałszywych impulsów
+
+Czujnik Halla i przewody mogą generować zakłócenia. Dlatego impulsy pojawiające się zbyt szybko po poprzednim impulsie należy odrzucać.
+
+Warunek akceptacji impulsu:
+
+$$
+t_{now} - t_{last} > t_{debounce}
+$$
+
+gdzie:
+
+- `t_now` - aktualny czas,
+- `t_last` - czas poprzedniego zaakceptowanego impulsu,
+- `t_debounce` - minimalny odstęp między impulsami.
+
+Jeżeli warunek nie jest spełniony, impuls jest traktowany jako zakłócenie.
+
+## Wykrywanie zatrzymania
+
+Gdy rower się zatrzyma, impulsy z czujnika Halla przestają przychodzić. Bez dodatkowej logiki na ekranie mogłaby pozostać ostatnia prędkość.
+
+Warunek zatrzymania:
+
+$$
+t_{now} - t_{last\_pulse} > t_{stop}
+$$
+
+Jeżeli warunek jest spełniony:
+
+$$
+v = 0
+$$
+
+oraz:
+
+$$
+v_f = 0
+$$
+
+gdzie `t_stop` to czas po którym system uznaje, że rower stoi.
+
+## Wysokość z ciśnienia
+
+Wysokość można szacować na podstawie ciśnienia atmosferycznego. W praktyce używa się wzoru barometrycznego:
+
+$$
+h = 44330 \cdot \left(1 - \left(\frac{p}{p_0}\right)^{0.1903}\right)
+$$
+
+gdzie:
+
+- `h` - wysokość w metrach,
+- `p` - zmierzone ciśnienie w hPa,
+- `p0` - ciśnienie odniesienia w hPa.
+
+Typowo jako wartość startową można przyjąć:
+
+$$
+p_0 = 1013.25 \text{ hPa}
+$$
+
+W praktyce dokładność wysokości zależy od pogody. Dlatego najlepszym rozwiązaniem jest kalibracja `p0` albo ustawienie znanej wysokości początkowej.
+
+## Nachylenie trasy
+
+Nachylenie trasy można obliczyć z różnicy wysokości i przebytego dystansu.
+
+$$
+grade = \frac{\Delta h}{\Delta d} \cdot 100\%
+$$
+
+gdzie:
+
+- `Delta h` - zmiana wysokości,
+- `Delta d` - dystans pokonany w analizowanym oknie.
+
+Przykład:
+
+$$
+\Delta h = 5 \text{ m}
+$$
+
+$$
+\Delta d = 100 \text{ m}
+$$
+
+$$
+grade = \frac{5}{100} \cdot 100\% = 5\%
+$$
+
+Nachylenia nie powinno się liczyć z dwóch sąsiednich próbek, bo wysokość z barometru może być zaszumiona. Lepsze jest okno pomiarowe, np. kilka sekund jazdy albo określony dystans.
+
+## VAM
+
+VAM oznacza prędkość zdobywania wysokości w metrach na godzinę.
+
+$$
+VAM = \frac{\Delta h}{\Delta t} \cdot 3600
+$$
+
+gdzie:
+
+- `Delta h` - zdobyta wysokość w metrach,
+- `Delta t` - czas w sekundach,
+- `3600` - przeliczenie sekund na godzinę.
+
+Przykład:
+
+$$
+\Delta h = 20 \text{ m}
+$$
+
+$$
+\Delta t = 120 \text{ s}
+$$
+
+$$
+VAM = \frac{20}{120} \cdot 3600 = 600 \text{ m/h}
+$$
+
+## Roll i pitch z akcelerometru
+
+Gdy rower stoi albo porusza się spokojnie, akcelerometr mierzy głównie składowe przyspieszenia ziemskiego. Można wtedy oszacować kąty przechylenia.
+
+Dla osi akcelerometru `ax`, `ay`, `az`:
+
+$$
+roll = atan2(a_y, a_z)
+$$
+
+$$
+pitch = atan2(-a_x, \sqrt{a_y^2 + a_z^2})
+$$
+
+Wynik w radianach można przeliczyć na stopnie:
+
+$$
+angle_{deg} = angle_{rad} \cdot \frac{180}{\pi}
+$$
+
+Ograniczenie: podczas dynamicznej jazdy wynik może być zaburzony przez drgania i przyspieszenia inne niż grawitacja.
+
+## Wskaźnik drgań
+
+Prosty wskaźnik drgań można policzyć z długości wektora przyspieszenia.
+
+$$
+a_{mag} = \sqrt{a_x^2 + a_y^2 + a_z^2}
+$$
+
+Następnie można odjąć wartość średnią albo wartość odpowiadającą grawitacji i obliczyć RMS w oknie pomiarowym.
+
+$$
+vib_{RMS} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(a_{mag}[i] - \overline{a}_{mag})^2}
+$$
+
+Wartość ta nie jest dokładnym pomiarem drgań laboratoryjnych, ale może pokazać, czy rower jedzie po gładkiej czy nierównej nawierzchni.
+
+## Szacowanie mocy rowerzysty
+
+Uproszczony model mocy może składać się z trzech głównych części:
+
+$$
+P_{total} = P_{climb} + P_{roll} + P_{aero}
+$$
+
+### Moc na podjazd
+
+Moc potrzebna do zwiększania wysokości:
+
+$$
+P_{climb} = m \cdot g \cdot v_{vertical}
+$$
+
+gdzie:
+
+$$
+v_{vertical} = v \cdot \frac{grade}{100}
+$$
+
+czyli:
+
+$$
+P_{climb} = m \cdot g \cdot v \cdot \frac{grade}{100}
+$$
+
+### Opory toczenia
+
+$$
+P_{roll} = C_{rr} \cdot m \cdot g \cdot v
+$$
+
+gdzie `Crr` zależy od opon, nawierzchni i ciśnienia w oponach.
+
+### Opór aerodynamiczny
+
+$$
+P_{aero} = \frac{1}{2} \cdot \rho \cdot C_dA \cdot v^3
+$$
+
+Opór aerodynamiczny rośnie z trzecią potęgą prędkości, dlatego przy szybkiej jeździe zaczyna dominować.
+
+### Całkowita moc
+
+$$
+P_{total} = m \cdot g \cdot v \cdot \frac{grade}{100} + C_{rr} \cdot m \cdot g \cdot v + \frac{1}{2} \cdot \rho \cdot C_dA \cdot v^3
+$$
+
+Ten model jest przybliżeniem. Nie uwzględnia wiatru, strat napędu, zmian nawierzchni, pozycji rowerzysty ani przyspieszania.
+
+## Energia i kilokalorie
+
+Energia mechaniczna może być liczona z mocy w czasie:
+
+$$
+E = P \cdot t
+$$
+
+gdzie:
+
+- `E` - energia w dżulach,
+- `P` - moc w watach,
+- `t` - czas w sekundach.
+
+Przeliczenie dżuli na kilokalorie mechaniczne:
+
+$$
+kcal_{mech} = \frac{E}{4184}
+$$
+
+Organizm człowieka nie ma sprawności 100%. Jeżeli przyjmiemy sprawność `eta`, energia metaboliczna wynosi:
+
+$$
+kcal_{human} = \frac{kcal_{mech}}{\eta}
+$$
+
+Przykładowo dla sprawności:
+
+$$
+\eta = 0.25
+$$
+
+wynik metaboliczny jest około cztery razy większy niż energia mechaniczna.
+
+## Ograniczenia algorytmów
+
+Najważniejsze ograniczenia:
+
+- wysokość z barometru zależy od pogody,
+- prędkość z czujnika Halla wymaga poprawnej kalibracji obwodu koła,
+- IMU jest wrażliwe na drgania,
+- model mocy jest tylko estymacją,
+- wiatr i pozycja rowerzysty mogą mocno zmieniać realną moc,
+- nachylenie powinno być liczone z okna pomiarowego, a nie z pojedynczych próbek.
