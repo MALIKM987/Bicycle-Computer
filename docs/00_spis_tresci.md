@@ -13,8 +13,6 @@ Ten katalog zawiera dokumentację techniczną projektu komputera rowerowego STM3
 7. [Kalibracja](07_kalibracja.md)
 8. [Testy i walidacja](08_testy_walidacja.md)
 9. [Plan rozwoju](09_roadmap.md)
-10. [Opis do portfolio](10_portfolio.md)
-11. [Powiązanie z pracą inżynierską](11_praca_inzynierska.md)
 
 ## Proponowana kolejność czytania
 
