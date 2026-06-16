@@ -1,0 +1,26 @@
+# STM32CubeIDE / Eclipse
+.metadata/
+.settings/
+
+# Build outputs
+Debug/
+Release/
+build/
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.o
+*.d
+*.a
+
+# Logs and generated data
+*.log
+*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
