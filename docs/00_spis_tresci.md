@@ -12,7 +12,6 @@ Ten katalog zawiera dokumentację techniczną projektu komputera rowerowego STM3
 6. [UART i CSV](06_uart_csv.md)
 7. [Kalibracja](07_kalibracja.md)
 8. [Testy i walidacja](08_testy_walidacja.md)
-9. [Plan rozwoju](09_roadmap.md)
 
 ## Proponowana kolejność czytania
 
