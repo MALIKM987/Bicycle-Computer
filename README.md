@@ -114,15 +114,6 @@ Podstawowy przepływ pracy:
 6. Otworzyć terminal UART i sprawdzić logi diagnostyczne.
 7. Przeprowadzić testy stanowiskowe i terenowe.
 
-## Status i dalszy rozwój
-
-Projekt jest prototypem. Najważniejsze kolejne kroki to:
-
-- dodać zdjęcia połączeń i ekranu OLED,
-- dodać przykładowy log CSV z jazdy,
-- uporządkować kod w moduły opisane w dokumentacji,
-- przeprowadzić walidację terenową,
-- przygotować projekt własnej płytki PCB.
 
 ## Autor
 
