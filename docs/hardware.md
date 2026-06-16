@@ -1,49 +1,30 @@
-# Hardware Description
+# Opis sprzętu
 
-## Prototype Platform
+## Platforma prototypowa
 
-The current prototype targets an STM32L432KC / NUCLEO-L432KC board.
+Aktualna wersja projektu jest przygotowana dla mikrokontrolera STM32L432KC, używanego na płytce NUCLEO-L432KC.
 
-## Main Components
+## Główne elementy
 
-| Component | Interface | Purpose |
+| Element | Interfejs | Rola |
 |---|---|---|
-| Hall effect sensor | GPIO / EXTI | Wheel rotation detection |
-| BME280 | I2C | Temperature, pressure, humidity |
-| BMI160 or compatible IMU | I2C | Acceleration, orientation, vibration |
-| SSD1306 OLED 128x64 | I2C | Local display |
-| Button | GPIO | User interface navigation |
-| UART | USART | Diagnostics and CSV logging |
+| STM32L432KC | MCU | sterowanie całym systemem |
+| czujnik Halla | GPIO / przerwanie | pomiar obrotów koła |
+| BME280 | I2C | temperatura, ciśnienie, wilgotność |
+| IMU | I2C | orientacja i drgania |
+| OLED SSD1306 | I2C | prezentacja danych |
+| przycisk | GPIO | zmiana ekranów |
+| UART | USART | diagnostyka i eksport CSV |
 
-## Sensor Notes
+## Uwagi sprzętowe
 
-### Hall Sensor
+Czujnik Halla wymaga filtracji programowej, ponieważ zakłócenia mogą powodować fałszywe impulsy. Magistrala I2C powinna mieć poprawne rezystory podciągające. W wersji docelowej należy przewidzieć wygodne złącze programujące oraz złącza dla czujników.
 
-The Hall sensor is used for speed and distance measurement. Each valid pulse corresponds to wheel rotation. A debounce mechanism is required to avoid false triggering caused by noise or mechanical vibration.
+## Możliwy rozwój sprzętu
 
-### BME280
-
-The BME280 provides temperature, pressure and humidity. Pressure is also used to estimate altitude, but absolute altitude requires calibration against local reference pressure.
-
-### IMU
-
-The IMU provides acceleration data that can be used to estimate roll, pitch and vibration indicators.
-
-### OLED
-
-The SSD1306 OLED provides a compact low-power interface for live ride data.
-
-## Future Hardware Revision
-
-A future custom PCB may include:
-
-- STM32L4 microcontroller,
-- regulated low-power supply,
-- battery input,
-- charging/protection section,
-- I2C sensor connector,
-- Hall sensor connector,
-- OLED connector,
-- SWD programming header,
-- optional external flash or EEPROM,
-- weather-resistant enclosure support.
+- własna płytka PCB,
+- zasilanie bateryjne,
+- układ ładowania i zabezpieczeń,
+- obudowa odporna na warunki zewnętrzne,
+- złącza dla czujników i wyświetlacza,
+- wyprowadzenie interfejsu programowania.
