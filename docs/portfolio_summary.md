@@ -1,34 +1,23 @@
-# Portfolio Summary
+# Opis do portfolio
 
-## Project
+## Projekt
 
-**STM32 Bicycle Computer**
+Komputer rowerowy STM32.
 
-## One-Sentence Description
+## Krotki opis
 
-Embedded bicycle computer based on STM32, integrating Hall speed sensing, environmental sensing, IMU measurements, OLED UI, UART diagnostics and ride metric calculations.
+Projekt systemu wbudowanego oparty o mikrokontroler STM32, czujnik Halla, BME280, IMU, OLED oraz UART.
 
-## Technical Skills Demonstrated
+## Umiejetnosci pokazane w projekcie
 
-- STM32 firmware development in C.
-- STM32CubeIDE / STM32CubeMX workflow.
-- GPIO, EXTI, timers, UART and I2C.
-- Sensor integration.
-- Real-time measurement processing.
-- Signal filtering.
-- Embedded user interface design.
-- UART diagnostics and CSV logging.
-- Physical model implementation.
-- Hardware/software debugging.
+- programowanie STM32 w C,
+- integracja czujnikow,
+- obsluga I2C, UART, GPIO i przerwan,
+- przetwarzanie danych pomiarowych,
+- projektowanie prostego interfejsu OLED,
+- diagnostyka systemu embedded,
+- dokumentacja techniczna projektu.
 
-## Strong CV Description
+## Opis do CV
 
-Designed and implemented an STM32-based bicycle computer prototype integrating a Hall wheel sensor, environmental sensor, IMU, OLED display and UART diagnostics. Developed firmware modules for speed and distance measurement, ride statistics, altitude/grade/VAM estimation, environmental monitoring and simplified cycling power calculation.
-
-## Short CV Bullet Points
-
-- Developed embedded C firmware for STM32-based bicycle computer prototype.
-- Integrated Hall sensor, BME280, IMU and SSD1306 OLED over GPIO/EXTI/I2C/UART.
-- Implemented speed, distance, altitude, grade, VAM and estimated power calculations.
-- Added UART CSV logging for diagnostics and external ride data analysis.
-- Designed modular documentation and validation plan for hardware/software testing.
+Zaprojektowano i zaimplementowano prototyp komputera rowerowego na STM32, integrujacy czujnik Halla, czujnik srodowiskowy, IMU, wyswietlacz OLED oraz diagnostyke UART.
