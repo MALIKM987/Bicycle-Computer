@@ -91,9 +91,6 @@ Pełna dokumentacja jest podzielona na osobne pliki:
 | [docs/06_uart_csv.md](docs/06_uart_csv.md) | diagnostyka UART i format CSV |
 | [docs/07_kalibracja.md](docs/07_kalibracja.md) | kalibracja urządzenia |
 | [docs/08_testy_walidacja.md](docs/08_testy_walidacja.md) | plan testów i walidacji |
-| [docs/09_roadmap.md](docs/09_roadmap.md) | plan dalszego rozwoju |
-| [docs/10_portfolio.md](docs/10_portfolio.md) | opis projektu do CV i GitHuba |
-| [docs/11_praca_inzynierska.md](docs/11_praca_inzynierska.md) | powiązanie repozytorium z pracą inżynierską |
 
 ## Uruchomienie projektu
 
