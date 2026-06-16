@@ -1,48 +1,21 @@
-# Calibration Guide
+# Kalibracja
 
-## Wheel Circumference
+## Obwod kola
 
-Wheel circumference is required for speed and distance calculation.
+Obwod kola jest potrzebny do obliczania predkosci i dystansu. Najlepiej zmierzyc go praktycznie, wykonujac jeden pelny obrot kola po prostej powierzchni.
 
-Recommended procedure:
+## Czujnik Halla
 
-1. Mark the tire and floor.
-2. Roll the bicycle forward by one full wheel revolution.
-3. Measure distance between marks.
-4. Enter the value in meters in the firmware configuration.
+Nalezy dobrac czas odrzucania zbyt szybkich impulsow. Zbyt mala wartosc moze powodowac falszywe zliczenia, a zbyt duza moze odrzucac poprawne impulsy przy wysokiej predkosci.
 
-## Hall Sensor Debounce
+## Zatrzymanie roweru
 
-The debounce time prevents false pulses.
+Timeout zatrzymania okresla, po jakim czasie bez impulsu predkosc zostaje ustawiona na zero.
 
-If the value is too low, noise may be counted as additional wheel revolutions. If the value is too high, valid pulses at high speed may be ignored.
+## Wysokosc
 
-## Stop Timeout
+Estymacja wysokosci z cisnienia wymaga punktu odniesienia. Wyniki nalezy porownac z realna wysokoscia lub danymi z mapy.
 
-The stop timeout determines when speed should be forced to zero after the last pulse.
+## Model mocy
 
-## Altitude Calibration
-
-Pressure-based altitude depends on reference sea-level pressure. For better results, use local weather pressure or calibrate altitude manually at a known location.
-
-## Power Model Calibration
-
-Recommended parameters:
-
-| Parameter | Meaning |
-|---|---|
-| Total mass | rider + bicycle + equipment |
-| Crr | rolling resistance coefficient |
-| CdA | aerodynamic drag area |
-| Air density | can be approximated from weather |
-| Human efficiency | used for kcal estimation |
-
-## Field Validation
-
-During first rides, compare:
-
-- speed with GPS,
-- distance with known route,
-- altitude with map data,
-- grade with known climbs,
-- power with realistic effort level.
+Do szacowania mocy potrzebne sa parametry takie jak masa rowerzysty i roweru, opor toczenia oraz przyblizony opor aerodynamiczny.
