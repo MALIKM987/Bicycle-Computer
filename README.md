@@ -127,5 +127,3 @@ Projekt jest prototypem. Najważniejsze kolejne kroki to:
 ## Autor
 
 **Maciej Molik**
-
-Projekt z zakresu elektroniki, systemów wbudowanych, mikrokontrolerów STM32 i przetwarzania danych z czujników.
