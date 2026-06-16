@@ -1,50 +1,23 @@
-# Testing and Validation
+# Testowanie i walidacja
 
-## Goals
+## Cel testow
 
-Testing should verify that the firmware behaves correctly both on the bench and during real rides.
+Testy maja potwierdzic, ze firmware dziala poprawnie na biurku oraz podczas rzeczywistej jazdy.
 
-## Bench Tests
+## Testy stanowiskowe
 
-| Test | Expected Result |
-|---|---|
-| Power-on test | Firmware starts without hard fault |
-| OLED init | Display shows startup screen |
-| BME280 init | Temperature, pressure and humidity are valid |
-| IMU init | Roll/pitch values change when board is moved |
-| UART output | Serial terminal receives readable data |
-| Button test | OLED page changes after button press |
-| Hall pulse test | Speed changes after simulated pulses |
+- start programu bez zawieszenia,
+- poprawna inicjalizacja OLED,
+- poprawny odczyt BME280,
+- reakcja IMU na ruch plytki,
+- odbior danych przez UART,
+- reakcja przycisku,
+- poprawne zliczanie impulsow z czujnika Halla.
 
-## Hall Sensor Simulation
+## Testy terenowe
 
-A Hall pulse can be simulated manually or with a signal generator.
+W terenie nalezy porownac predkosc i dystans z innym urzadzeniem, sprawdzic stabilnosc wskazan OLED oraz zapisac przykladowy log UART/CSV.
 
-Recommended checks:
+## Walidacja algorytmow
 
-- no false pulses when idle,
-- correct debounce behavior,
-- speed returns to zero after stop timeout,
-- distance increases by wheel circumference per valid pulse.
-
-## Real Ride Tests
-
-| Metric | Validation Method |
-|---|---|
-| Speed | Compare with GPS or commercial bike computer |
-| Distance | Compare with known route |
-| Altitude | Compare with map/phone/barometer |
-| Grade | Compare on known climbs |
-| UART CSV | Verify row consistency and missing values |
-| OLED UI | Check readability outdoors |
-
-## Regression Testing Ideas
-
-For future development, logic-heavy modules can be extracted and tested on PC:
-
-- speed calculation,
-- EMA filter,
-- grade calculation,
-- VAM calculation,
-- power estimation,
-- CSV formatting.
+Najwazniejsze elementy do sprawdzenia to filtr predkosci, timeout zatrzymania, estymacja wysokosci, nachylenie, VAM oraz szacowanie mocy.
